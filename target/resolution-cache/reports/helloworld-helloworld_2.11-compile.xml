@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ivy-report.xsl"?>
+<ivy-report version="1.0">
+	<info
+		organisation="helloworld"
+		module="helloworld_2.11"
+		revision="1.0"
+		conf="compile"
+		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
+		date="20150307174315"/>
+	<dependencies>
+		<module organisation="org.twitter4j" name="twitter4j-stream">
+			<revision name="4.0.2" status="release" pubdate="20140624174300" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://twitter4j.org/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="1">
+				<license name="Apache License 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
+				<metadata-artifact status="no" details="" size="3418" time="0" location="/Users/mozilla/.ivy2/cache/org.twitter4j/twitter4j-stream/ivy-4.0.2.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/twitter4j/twitter4j-stream/4.0.2/twitter4j-stream-4.0.2.pom"/>
+				<caller organisation="helloworld" name="helloworld_2.11" conf="compile" rev="4.0.2" rev-constraint-default="4.0.2" rev-constraint-dynamic="4.0.2" callerrev="1.0"/>
+				<artifacts>
+					<artifact name="twitter4j-stream" type="jar" ext="jar" status="no" details="" size="57583" time="0" location="/Users/mozilla/.ivy2/cache/org.twitter4j/twitter4j-stream/jars/twitter4j-stream-4.0.2.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/twitter4j/twitter4j-stream/4.0.2/twitter4j-stream-4.0.2.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.twitter4j" name="twitter4j-core">
+			<revision name="4.0.2" status="release" pubdate="20140624174122" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://twitter4j.org/" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="2">
+				<license name="Apache License 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
+				<metadata-artifact status="no" details="" size="3611" time="0" location="/Users/mozilla/.ivy2/cache/org.twitter4j/twitter4j-core/ivy-4.0.2.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/twitter4j/twitter4j-core/4.0.2/twitter4j-core-4.0.2.pom"/>
+				<caller organisation="org.twitter4j" name="twitter4j-stream" conf="default, compile, runtime, master" rev="4.0.2" rev-constraint-default="4.0.2" rev-constraint-dynamic="4.0.2" callerrev="4.0.2"/>
+				<artifacts>
+					<artifact name="twitter4j-core" type="jar" ext="jar" status="no" details="" size="280412" time="0" location="/Users/mozilla/.ivy2/cache/org.twitter4j/twitter4j-core/jars/twitter4j-core-4.0.2.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/twitter4j/twitter4j-core/4.0.2/twitter4j-core-4.0.2.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-lang" name="scala-library">
+			<revision name="2.11.5" status="release" pubdate="20150107023212" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.11.5/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
+				<license name="BSD 3-Clause" url="http://www.scala-lang.org/license.html"/>
+				<metadata-artifact status="no" details="" size="2653" time="0" location="/Users/mozilla/.ivy2/cache/org.scala-lang/scala-library/ivy-2.11.5.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/scala-lang/scala-library/2.11.5/scala-library-2.11.5.pom"/>
+				<caller organisation="helloworld" name="helloworld_2.11" conf="compile" rev="2.11.5" rev-constraint-default="2.11.5" rev-constraint-dynamic="2.11.5" callerrev="1.0"/>
+				<artifacts>
+					<artifact name="scala-library" type="jar" ext="jar" status="no" details="" size="5576839" time="0" location="/Users/mozilla/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.5.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/scala-lang/scala-library/2.11.5/scala-library-2.11.5.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+	</dependencies>
+</ivy-report>
