@@ -4,6 +4,7 @@ import java.util.concurrent.{ExecutorService, Executors}
 
 import kafka.consumer.{ConsumerConfig, KafkaStream}
 import kafka.javaapi.consumer.ConsumerConnector
+import kafka.utils.ZkUtils
 
 import scala.collection.JavaConversions._
 
@@ -33,6 +34,8 @@ class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: Stri
     if (executor != null) executor.shutdown()
   }
 
+
+
   def run(a_numThreads: Int) {
     val topicCountMap: util.Map[String, Integer] = new util.HashMap[String, Integer]()
     topicCountMap.put(topic, new Integer(a_numThreads))
@@ -54,13 +57,16 @@ class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: Stri
 
   def createConsumerConfig(a_zookeeper: String, a_groupId: String): ConsumerConfig = {
     val props: Properties = new Properties()
-    println("connect to ", a_zookeeper)
+
+    ZkUtils.maybeDeletePath(a_zookeeper, "/consumers/" + new String(a_groupId))
+
     props.put("zookeeper.connect", a_zookeeper)
     props.put("group.id", a_groupId)
     props.put("auto.offset.reset", "smallest")
     props.put("zookeeper.session.timeout.ms", "400")
     props.put("zookeeper.sync.time.ms", "200")
     props.put("auto.commit.interval.ms", "1000")
+    props.put("auto.offset.reset", "smallest")
 
     new ConsumerConfig(props)
   }

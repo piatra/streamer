@@ -57,7 +57,7 @@ object App {
     val example = new ConsumerGroupExample(zooKeeper, groupId, topic)
     example.run(threads)
 
-    Thread.sleep(20000)
+    Thread.sleep(5000)
 
     example.shutdown()
   }
