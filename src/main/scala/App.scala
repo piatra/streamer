@@ -26,7 +26,7 @@ object App {
   }
 
   object StatusStreamer {
-    def getTweets(keywords: Array[String]) {
+    def fetchTweets(keywords: Array[String]) {
       val twitterStream = new TwitterStreamFactory(Util.config).getInstance
       val filter = new FilterQuery()
 
@@ -37,16 +37,28 @@ object App {
       Thread.sleep(10000)
 
       queue.put("STOP", "STOP")
-      twitterStream.cleanUp
-      twitterStream.shutdown
+      twitterStream.cleanUp()
+      twitterStream.shutdown()
     }
   }
 
   def main(args : Array[String]) {
-    val prodThread = new Thread(new KafkaProducer(queue))
-    prodThread.start()
+//    val prodThread = new Thread(new KafkaProducer(queue))
+//    prodThread.start()
+//
+//    StatusStreamer.fetchTweets(Array("Justin Bieber"))
+//    prodThread.join()
 
-    StatusStreamer.getTweets(Array("Justin Bieber"))
-    prodThread.join()
+    val zooKeeper: String = "localhost:2181"
+    val groupId: String = "1"
+    val topic: String = "javascript"
+    val threads: Int = 1
+
+    val example = new ConsumerGroupExample(zooKeeper, groupId, topic)
+    example.run(threads)
+
+    Thread.sleep(20000)
+
+    example.shutdown()
   }
 }
