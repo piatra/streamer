@@ -13,12 +13,11 @@ class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumb
   var m_threadNumber: Integer = a_threadNumber
 
   def run() {
-    println("Running thread $m_threadNumber")
     val it = m_stream.iterator()
     while (it.hasNext()) {
-      println("Thread " + m_threadNumber + ": " + new String(it.next().message()))
+      println(s"Thread $m_threadNumber: " + new String(it.next().message()))
     }
-    println("Shutting down Thread: " + m_threadNumber)
+    println(s"Shutting down Thread: $m_threadNumber")
   }
 }
 
