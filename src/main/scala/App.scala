@@ -2,6 +2,14 @@ import java.util.concurrent.LinkedBlockingQueue
 
 import twitter4j._
 
+import java.io.PrintWriter
+import java.util.Properties
+import edu.stanford.nlp.ling._
+import edu.stanford.nlp.pipeline._
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation
+import edu.stanford.nlp.semgraph.{SemanticGraphCoreAnnotations, SemanticGraph}
+import scala.collection.JavaConversions._
+
 object App {
   val queue = new LinkedBlockingQueue[(String, String)]
 
@@ -45,23 +53,61 @@ object App {
     }
   }
 
+  object TweetParser {
+
+    def printTree(root: IndexedWord, out: PrintWriter, tokens: SemanticGraph): Unit = {
+      val children = tokens.getChildList(root)
+      for (child <- children) {
+        out.println(child.originalText())
+        out.println(child.ner())
+        out.println(child.tag())
+        out.println("----")
+        printTree(child, out, tokens)
+      }
+    }
+
+    def print() {
+      val props = new Properties()
+      val xmlOut = new PrintWriter("myfileout")
+      props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref")
+      val pipeline = new StanfordCoreNLP(props)
+
+      val document = new Annotation("Bell, based in Los Angeles, makes and distributes electronic, computer and building products.")
+
+
+      pipeline.annotate(document)
+
+      val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
+      if (sentences != null && !sentences.isEmpty()) {
+        val sentence = sentences.get(0)
+        val tokens = sentence.get(classOf[CollapsedDependenciesAnnotation])
+        val root = tokens.getFirstRoot
+        printTree(root, xmlOut, tokens)
+      }
+
+      xmlOut.close()
+    }
+
+  }
+
   def main(args : Array[String]) {
-      val prodThread = new Thread(new KafkaProducer(queue))
-      prodThread.start()
-
-      StatusStreamer.fetchTweets(Array("Justin Bieber"))
-
-      val zooKeeper: String = "localhost:2181"
-      val groupId: String = "1"
-      val topic: String = "javascript"
-      val threads: Int = 1
-
-      val example = new ConsumerGroupExample(zooKeeper, groupId, topic)
-      example.run(threads)
-
-      Thread.sleep(10000)
-      StatusStreamer.shutdown()
-      prodThread.join()
-      example.shutdown()
+    TweetParser.print()
+//      val prodThread = new Thread(new KafkaProducer(queue))
+//      prodThread.start()
+//
+//      StatusStreamer.fetchTweets(Array("Justin Bieber"))
+//
+//      val zooKeeper: String = "localhost:2181"
+//      val groupId: String = "1"
+//      val topic: String = "javascript"
+//      val threads: Int = 1
+//
+//      val example = new ConsumerGroupExample(zooKeeper, groupId, topic)
+//      example.run(threads)
+//
+//      Thread.sleep(10000)
+//      StatusStreamer.shutdown()
+//      prodThread.join()
+//      example.shutdown()
   }
 }
