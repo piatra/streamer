@@ -1,6 +1,6 @@
 import java.util
 import java.util.Properties
-import java.util.concurrent.{ExecutorService, Executors}
+import java.util.concurrent.{LinkedBlockingQueue, ExecutorService, Executors}
 
 import kafka.consumer.{ConsumerConfig, KafkaStream}
 import kafka.javaapi.consumer.ConsumerConnector
@@ -8,23 +8,26 @@ import kafka.utils.ZkUtils
 
 import scala.collection.JavaConversions._
 
-class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumber: Int) extends Runnable {
+class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumber: Int,
+                   queue: LinkedBlockingQueue[(String, String)]) extends Runnable {
+
   var m_stream: KafkaStream[Array[Byte], Array[Byte]] = a_stream
   var m_threadNumber: Integer = a_threadNumber
 
   def run() {
     val it = m_stream.iterator()
     while (it.hasNext()) {
-      println(s"Thread $m_threadNumber: " + new String(it.next().message()))
+      queue.put((m_threadNumber.toString, new String(it.next().message())))
     }
     println(s"Shutting down Thread: $m_threadNumber")
   }
 }
 
-class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: String) {
-  println("topic", a_topic)
-  var consumer: ConsumerConnector = kafka.consumer.Consumer.createJavaConsumerConnector(
-    createConsumerConfig(a_zookeeper, a_groupId))
+class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: String,
+                           queue: LinkedBlockingQueue[(String, String)]) {
+
+  var consumer: ConsumerConnector = kafka.consumer.Consumer
+                                              .createJavaConsumerConnector(createConsumerConfig(a_zookeeper, a_groupId))
   var topic: String = a_topic
   var executor: ExecutorService = _
 
@@ -32,8 +35,6 @@ class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: Stri
     if (consumer != null) consumer.shutdown()
     if (executor != null) executor.shutdown()
   }
-
-
 
   def run(a_numThreads: Int) {
     val topicCountMap: util.Map[String, Integer] = new util.HashMap[String, Integer]()
@@ -49,7 +50,7 @@ class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: Stri
     //
     var threadNumber: Int = 0
     for (stream <- streams.iterator()) {
-      executor.submit(new ConsumerTest(stream, threadNumber))
+      executor.submit(new ConsumerTest(stream, threadNumber, queue))
       threadNumber += 1
     }
   }
