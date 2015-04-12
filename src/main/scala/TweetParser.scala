@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 
 class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWriter) {
 
-  def blacklist = List("DT", "CC", "PRP")
+  def blacklist = List("DT", "CC", "PRP", "RT", "RB")
   def whitelist = List("USR", "LOCATION", "PERSON")
 
   def isValid(tokens: util.ArrayList[String]): Boolean = {
@@ -26,11 +26,16 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
       }
     }
 
-    true
+    return true
   }
 
   def printWord(node: util.ArrayList[String]): Unit = {
     out.print("[ "+ node.mkString(" ") + " ]")
+  }
+
+  def computeWeight(node: Array[util.ArrayList[String]]): Map[String, Float] = {
+    val length = node.length
+    node.map(e => e.drop(2).head).groupBy(e => e).map(e => e._1 -> (e._2.length.toFloat / length))
   }
 
   def extractWord(node: IndexedWord): List[String] = {
@@ -52,27 +57,52 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
     println(tweets.size() + " tweets to parse")
 
-    tweets.foreach { tweet =>
+    val weightedTweets: Iterable[Map[String, Float]] = tweets.map{ tweet =>
       var cleanTweet = formatTweet(tweet._2)
-      out.println(tweet._2)
-      out.println(cleanTweet)
-      out.print("\n[")
+      out.println(tweet)
       val document = new Annotation(cleanTweet)
       pipeline.annotate(document)
 
       val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
+      var weights = Map[String, Float]()
+      println(sentences)
       if (sentences != null && sentences.size() != 0) {
-        sentences.foreach { sentence =>
-          println(sentence)
-          val tokens = sentence.get(classOf[CollapsedDependenciesAnnotation])
-
-          val ne = new NodeExtractor(tokens)
-          println(ne.getAll())
-
-          ne.getAll().filter(isValid).foreach(printWord)
-        }
+        weights = computeWeight(sentences.map { sentence =>
+          val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
+          ne.getAll().filter(isValid)
+        }.flatten.toArray)
       }
-      out.print("]\n\n\n")
+
+      // Add tweet user to the map
+      weights += tweet._1 -> 1.toFloat
+      weights
+    }
+
+    println(weightedTweets)
+
+    val simt = weightedTweets.map{ tweet =>
+      val idx = weightedTweets.toSeq.indexOf(tweet)
+      weightedTweets.map{ compareTweet =>
+        val idy = weightedTweets.toSeq.indexOf(compareTweet)
+        if (idx == idy)
+          0
+        else
+          tweet.keySet.intersect(compareTweet.keySet).toArray.foldLeft(0.toFloat)((acc, e) => computeWeightAverage(
+            acc, e, tweet, compareTweet
+          ))
+      }
+    }
+
+    println(simt)
+  }
+
+  def computeWeightAverage(acc: Float, e: String, first: Map[String, Float], second: Map[String, Float]): Float = {
+    first.get(e) match {
+      case Some(x) => second.get(e) match {
+        case Some(y) => acc + (x + y) / 2
+        case _ => acc
+      }
+      case _ => acc
     }
   }
 }
