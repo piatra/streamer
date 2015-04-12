@@ -16,7 +16,7 @@ class KafkaProducer(val messages: LinkedBlockingQueue[(String, String)]) extends
     while (process == 1) {
       val message = messages.take
       println(message)
-      val data = new KeyedMessage[String, String]("javascript", message._1, message._2)
+      val data = new KeyedMessage[String, String]("test", message._1, message._2)
       message match {
         case ("STOP", "STOP") => process = 0
         case _ => producer.send(data)
