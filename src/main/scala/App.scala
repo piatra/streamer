@@ -51,24 +51,25 @@ object App {
 //    val prodThread = new Thread(new KafkaProducer(writequeue))
 //    prodThread.start()
 //
-//    StatusStreamer.fetchTweets(Array("scotlandrun", "#scotlandrun", "#nyrr", "#runchat"))
+//    StatusStreamer.fetchTweets(Array("javascript", "nodejs"))
 //
     val zooKeeper: String = "localhost:2181"
     val groupId: String = "1"
-    val topic: String = "javascript"
+    val topic: String = "test"
     val threads: Int = 1
     val xmlOut = new PrintWriter("myfileout")
 
-    readqueue.put(("@ndrei", "Gillian Buttar completed the Scotland Run 10K ! Time 01:00:15 (UNOFFICIAL) http://t.co/nHa4slJZxZ #scotlandrun"))
     val TweetParser = new TweetParser(readqueue, xmlOut)
 
-//    val example = new ConsumerGroupExample(zooKeeper, groupId, topic, readqueue)
-//    example.run(threads)
+    val example = new ConsumerGroupExample(zooKeeper, groupId, topic, readqueue)
+    example.run(threads)
 
-//    Thread.sleep(1000)
+    Thread.sleep(2000)
 //    StatusStreamer.shutdown()
 //    prodThread.join()
-//    example.shutdown()
+    example.shutdown()
+
+    println(readqueue.size() + " tweets to parse")
 
     TweetParser.print()
 
