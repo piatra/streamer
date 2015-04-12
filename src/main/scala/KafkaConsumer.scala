@@ -17,9 +17,9 @@ class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumb
   def run() {
     val it = m_stream.iterator()
     while (it.hasNext()) {
-      queue.put((m_threadNumber.toString, new String(it.next().message())))
+      val next = it.next()
+      queue.put((new String(next.key()), new String(next.message())))
     }
-    println(s"Shutting down Thread: $m_threadNumber")
   }
 }
 
