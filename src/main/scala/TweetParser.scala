@@ -74,11 +74,9 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
       }
 
       // Add tweet user to the map
-      weights += tweet._1 -> 1.toFloat
+      // weights += tweet._1 -> 1.toFloat
       weights
     }
-
-    println(weightedTweets)
 
     val simt = weightedTweets.map{ tweet =>
       val idx = weightedTweets.toSeq.indexOf(tweet)
@@ -93,7 +91,30 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
       }
     }
 
-    println(simt)
+    val half = simt.map{lst =>
+      var idx = -1
+      lst.map{elem =>
+        idx += 1
+        (elem, idx)
+      }.filter(e => e._1 == lst.max && e._1 > 0.15)
+    }
+
+    var adjencency = half.map{lst =>
+      lst.foldLeft(List[Int]())((acc, weights) => acc :+ weights._2)
+    }.zipWithIndex.map{elem =>
+      elem._1 :+ elem._2
+    }.map(e => e.sorted)
+
+    var clusters = scala.collection.mutable.Map[Int,Int]()
+
+    adjencency.zipWithIndex.foldLeft(clusters)((acc, e) => {
+      e._1.min match {
+        case e._2 => acc += e._2 -> e._1.max
+        case _ => acc += e._2 -> e._1.min
+      }
+    })
+
+    println(clusters)
   }
 
   def computeWeightAverage(acc: Float, e: String, first: Map[String, Float], second: Map[String, Float]): Float = {
