@@ -24,3 +24,4 @@ testdata/debugger
 lib/stanford-corenlp-3.5.1-models.jar
 lib/stanford-corenlp-3.5.1.jar
 .idea
+tryouts.sc
