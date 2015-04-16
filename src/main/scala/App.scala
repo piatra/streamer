@@ -59,7 +59,7 @@ object App {
     val example = new KafkaConsumer(topic, readqueue)
     example.run(threads)
 
-    Thread.sleep(2000)
+    Thread.sleep(60000)
     StatusStreamer.shutdown()
     prodThread.join()
     example.shutdown()
