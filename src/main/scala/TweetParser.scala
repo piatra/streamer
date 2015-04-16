@@ -13,6 +13,7 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
   def blacklist = List("DT", "CC", "PRP", "RT", "RB")
   def whitelist = List("USR", "LOCATION", "PERSON")
+  var tweetList = List[(String, String)]()
 
   def isValid(tokens: util.ArrayList[String]): Boolean = {
     if (blacklist.indexOf(tokens.head) >= 0) {
@@ -49,7 +50,7 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
     buf
   }
 
-  def print() {
+  def groupTweets(): scala.collection.mutable.Map[Int,Int] = {
     val props = new Properties()
     props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
     props.put("pos.model", "lib/models/gate-EN-twitter.model")
@@ -58,7 +59,10 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
     println(tweets.size() + " tweets to parse")
 
     val weightedTweets: Iterable[Map[String, Float]] = tweets.map{ tweet =>
-      var cleanTweet = formatTweet(tweet._2)
+
+      tweetList = tweetList :+ tweet
+
+      val cleanTweet = formatTweet(tweet._2)
       out.println(tweet)
       val document = new Annotation(cleanTweet)
       pipeline.annotate(document)
@@ -78,6 +82,8 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
       weights
     }
 
+    println(weightedTweets)
+
     val simt = weightedTweets.map{ tweet =>
       val idx = weightedTweets.toSeq.indexOf(tweet)
       weightedTweets.map{ compareTweet =>
@@ -93,28 +99,44 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
     val half = simt.map{lst =>
       var idx = -1
+      println(lst)
       lst.map{elem =>
         idx += 1
         (elem, idx)
       }.filter(e => e._1 == lst.max && e._1 > 0.15)
     }
 
-    var adjencency = half.map{lst =>
+    val adjencency = half.map{lst =>
       lst.foldLeft(List[Int]())((acc, weights) => acc :+ weights._2)
     }.zipWithIndex.map{elem =>
       elem._1 :+ elem._2
     }.map(e => e.sorted)
 
-    var clusters = scala.collection.mutable.Map[Int,Int]()
+    val clusters = scala.collection.mutable.Map[Int,Int]()
 
     adjencency.zipWithIndex.foldLeft(clusters)((acc, e) => {
-      e._1.min match {
-        case e._2 => acc += e._2 -> e._1.max
-        case _ => acc += e._2 -> e._1.min
-      }
+      acc += e._2 -> e._1.min
     })
 
-    println(clusters)
+    clusters
+  }
+
+  def printToFile(outf: PrintWriter): Unit = {
+    val m = groupTweets()
+    println(m)
+    m.foreach { item =>
+      outf.println(tweetList(item._1))
+      outf.println(tweetList(item._2))
+      outf.println()
+    }
+    println("Done printing")
+  }
+
+  def getCluster(key: Int, m: scala.collection.mutable.Map[Int,Int]): Int = {
+    m.get(key) match {
+      case Some(x) => if (x == key) x else getCluster(x, m)
+      case None => key
+    }
   }
 
   def computeWeightAverage(acc: Float, e: String, first: Map[String, Float], second: Map[String, Float]): Float = {
