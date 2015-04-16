@@ -48,30 +48,27 @@ object App {
   }
 
   def main(args : Array[String]) {
-//    val prodThread = new Thread(new KafkaProducer(writequeue))
-//    prodThread.start()
-//
-//    StatusStreamer.fetchTweets(Array("javascript", "nodejs"))
-//
-    val zooKeeper: String = "localhost:2181"
-    val groupId: String = "1"
+    val prodThread = new Thread(new KafkaProducer(writequeue))
+    prodThread.start()
+
+    StatusStreamer.fetchTweets(Array("javascript", "nodejs", "scala", "python"))
     val topic: String = "test"
-    val threads: Int = 1
+    val threads = 1
     val xmlOut = new PrintWriter("myfileout")
-
-    val TweetParser = new TweetParser(readqueue, xmlOut)
-
-    val example = new ConsumerGroupExample(zooKeeper, groupId, topic, readqueue)
+//
+    val example = new KafkaConsumer(topic, readqueue)
     example.run(threads)
 
     Thread.sleep(2000)
-//    StatusStreamer.shutdown()
-//    prodThread.join()
+    StatusStreamer.shutdown()
+    prodThread.join()
     example.shutdown()
 
     println(readqueue.size() + " tweets to parse")
 
-    TweetParser.print()
+    val TweetParser = new TweetParser(readqueue, xmlOut)
+    println("Print to file")
+    TweetParser.printToFile(xmlOut)
 
     xmlOut.close()
   }

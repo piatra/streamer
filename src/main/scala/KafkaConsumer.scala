@@ -23,11 +23,13 @@ class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumb
   }
 }
 
-class ConsumerGroupExample(a_zookeeper: String, a_groupId: String, a_topic: String,
-                           queue: LinkedBlockingQueue[(String, String)]) {
+class KafkaConsumer(a_topic: String, queue: LinkedBlockingQueue[(String, String)]) {
+
+  val zooKeeper: String = "localhost:2181"
+  val groupId: String = "1"
 
   var consumer: ConsumerConnector = kafka.consumer.Consumer
-                                              .createJavaConsumerConnector(createConsumerConfig(a_zookeeper, a_groupId))
+                                              .createJavaConsumerConnector(createConsumerConfig(zooKeeper, groupId))
   var topic: String = a_topic
   var executor: ExecutorService = _
 

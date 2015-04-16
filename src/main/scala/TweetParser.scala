@@ -82,8 +82,6 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
       weights
     }
 
-    println(weightedTweets)
-
     val simt = weightedTweets.map{ tweet =>
       val idx = weightedTweets.toSeq.indexOf(tweet)
       weightedTweets.map{ compareTweet =>
@@ -99,7 +97,6 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
     val half = simt.map{lst =>
       var idx = -1
-      println(lst)
       lst.map{elem =>
         idx += 1
         (elem, idx)
@@ -116,6 +113,10 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
     adjencency.zipWithIndex.foldLeft(clusters)((acc, e) => {
       acc += e._2 -> e._1.min
+//      e._1.min match {
+//        case e._2 => acc += e._2 -> e._1.max
+//        case _ => acc += e._2 -> e._1.min
+//      }
     })
 
     clusters
@@ -123,13 +124,20 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
   def printToFile(outf: PrintWriter): Unit = {
     val m = groupTweets()
-    println(m)
-    m.foreach { item =>
-      outf.println(tweetList(item._1))
-      outf.println(tweetList(item._2))
+//    m.foreach { item =>
+//      outf.println(tweetList(item._1))
+//      outf.println(tweetList(item._2))
+//      outf.println()
+//    }
+    m.toList.groupBy {
+      case (x, y) => getCluster(y, m)
+    }.toList.foreach { cluster =>
+      println(cluster)
+      cluster._2.foreach { tweetId =>
+        outf.println(tweetList(tweetId._2))
+      }
       outf.println()
     }
-    println("Done printing")
   }
 
   def getCluster(key: Int, m: scala.collection.mutable.Map[Int,Int]): Int = {
