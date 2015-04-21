@@ -55,7 +55,7 @@ object App {
     val topic: String = "test"
     val threads = 1
     val xmlOut = new PrintWriter("myfileout")
-//
+
     val example = new KafkaConsumer(topic, readqueue)
     example.run(threads)
 
