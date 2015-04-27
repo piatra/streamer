@@ -16,7 +16,7 @@ class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumb
 
   def run() {
     val it = m_stream.iterator()
-    var steps = 30
+    var steps = 20
     while (it.hasNext() && steps > 0) {
       steps = steps - 1
       val next = it.next()

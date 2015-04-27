@@ -7,9 +7,9 @@ import scala.io.Source
 
 import scala.io.BufferedSource
 
-class Server extends Runnable {
+class Server(port: Int) extends Runnable {
 
-  val server = new ServerSocket(9999)
+  val server = new ServerSocket(port)
   val pool: ExecutorService = Executors.newFixedThreadPool(5)
 
   def run(): Unit = {
@@ -25,7 +25,7 @@ class ServerController(socket: Socket) extends Runnable {
     val in = new BufferedSource(socket.getInputStream()).getLines()
     val out = new PrintStream(socket.getOutputStream())
 
-    val filename = "/Users/mozilla/IdeaProjects/HelloWorld/build"
+    val filename = "/Users/mozilla/IdeaProjects/HelloWorld/myfileout"
     try {
       for (line <- Source.fromFile(filename).getLines()) {
         out.print(line)

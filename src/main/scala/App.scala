@@ -1,5 +1,6 @@
 import java.util.concurrent.LinkedBlockingQueue
 
+import controllers.Server.FinagleServer
 import twitter4j._
 
 object App {
@@ -40,17 +41,18 @@ object App {
   }
 
   def main(args : Array[String]) {
-
-    StatusStreamer.fetchTweets(Array("javascript"))
-    (new Thread(new Server(8080))).start()
-
-    val topic: String = "javascript"
-    val threads = 1
-
-    val example = new KafkaConsumer(topic)
-    example.run(threads)
-    Thread.sleep(1000)
-    example.shutdown()
-    println("Done parsing")
+      val server = new FinagleServer
+      server.serve()
+//    StatusStreamer.fetchTweets(Array("javascript"))
+//    (new Thread(new Server(8080))).start()
+//
+//    val topic: String = "javascript"
+//    val threads = 1
+//
+//    val example = new KafkaConsumer(topic)
+//    example.run(threads)
+//    Thread.sleep(1000)
+//    example.shutdown()
+//    println("Done parsing")
   }
 }

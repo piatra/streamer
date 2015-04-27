@@ -82,7 +82,7 @@ class TweetParser() {
     weights
   }
 
-  def groupTweets(tweets: LinkedBlockingQueue[(String, String)]): scala.collection.mutable.Map[Int,Int] = {
+  def groupTweets(tweets: LinkedBlockingQueue[(String, String)]): Map[Int,Int] = {
 
     val weightedTweets: Iterable[Map[String, Float]] = tweets.map(tweetSentenceWeights)
 
@@ -113,19 +113,17 @@ class TweetParser() {
       elem._1 :+ elem._2
     }.map(e => e.sorted)
 
-    val clusters = scala.collection.mutable.Map[Int,Int]()
-
-    adjencency.zipWithIndex.foldLeft(clusters)((acc, e) => {
-      acc += e._2 -> e._1.min
+    adjencency.zipWithIndex.foldLeft(Map.empty[Int, Int])((acc, e) => {
+      acc + (e._2 -> e._1.min)
     })
-
-    clusters
   }
 
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
-    val outFile = new PrintWriter("myfileout")
     val m = groupTweets(queue)
+    println(m)
+    val outFile = new PrintWriter("myfileout")
     outFile.println(m.map(e => (e._2, tweetList(e._1))).toList.toJson)
+    outFile.flush()
     outFile.close()
   }
 
