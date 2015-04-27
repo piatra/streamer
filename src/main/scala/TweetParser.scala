@@ -9,11 +9,26 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedDependenc
 
 import scala.collection.JavaConversions._
 
-class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWriter) {
+import spray.json._
+import DefaultJsonProtocol._ // if you don't supply your own Protocol (see below)
+
+class TweetParser() {
 
   def blacklist = List("DT", "CC", "PRP", "RT", "RB")
   def whitelist = List("USR", "LOCATION", "PERSON")
   var tweetList = List[(String, String)]()
+  val props = new Properties()
+  props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
+  props.put("pos.model", "lib/models/gate-EN-twitter.model")
+  val pipeline = new StanfordCoreNLP(props)
+  val queue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
+
+  def queueTweet(tweet: (String, String)): Unit = {
+    queue.put(tweet)
+    if (queue.size() % 10 == 0) {
+      printToFile(queue)
+    }
+  }
 
   def isValid(tokens: util.ArrayList[String]): Boolean = {
     if (blacklist.indexOf(tokens.head) >= 0) {
@@ -28,10 +43,6 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
     }
 
     return true
-  }
-
-  def printWord(node: util.ArrayList[String]): Unit = {
-    out.print("[ "+ node.mkString(" ") + " ]")
   }
 
   def computeWeight(node: Array[util.ArrayList[String]]): Map[String, Float] = {
@@ -50,37 +61,30 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
     buf
   }
 
-  def groupTweets(): scala.collection.mutable.Map[Int,Int] = {
-    val props = new Properties()
-    props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
-    props.put("pos.model", "lib/models/gate-EN-twitter.model")
-    val pipeline = new StanfordCoreNLP(props)
+  def tweetSentenceWeights(tweet: (String, String)): Map[String, Float] = {
 
-    println(tweets.size() + " tweets to parse")
+    tweetList = tweetList :+ tweet
 
-    val weightedTweets: Iterable[Map[String, Float]] = tweets.map{ tweet =>
+    val cleanTweet = formatTweet(tweet._2)
+    val document = new Annotation(cleanTweet)
+    pipeline.annotate(document)
 
-      tweetList = tweetList :+ tweet
-
-      val cleanTweet = formatTweet(tweet._2)
-      out.println(tweet)
-      val document = new Annotation(cleanTweet)
-      pipeline.annotate(document)
-
-      val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
-      var weights = Map[String, Float]()
-      println(sentences)
-      if (sentences != null && sentences.size() != 0) {
-        weights = computeWeight(sentences.map { sentence =>
-          val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
-          ne.getAll().filter(isValid)
-        }.flatten.toArray)
-      }
-
-      // Add tweet user to the map
-      // weights += tweet._1 -> 1.toFloat
-      weights
+    val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
+    var weights = Map[String, Float]()
+    println(sentences)
+    if (sentences != null && sentences.size() != 0) {
+      weights = computeWeight(sentences.map { sentence =>
+        val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
+        ne.getAll().filter(isValid)
+      }.flatten.toArray)
     }
+
+    weights
+  }
+
+  def groupTweets(tweets: LinkedBlockingQueue[(String, String)]): scala.collection.mutable.Map[Int,Int] = {
+
+    val weightedTweets: Iterable[Map[String, Float]] = tweets.map(tweetSentenceWeights)
 
     val simt = weightedTweets.map{ tweet =>
       val idx = weightedTweets.toSeq.indexOf(tweet)
@@ -113,31 +117,16 @@ class TweetParser(tweets: LinkedBlockingQueue[(String, String)], out: PrintWrite
 
     adjencency.zipWithIndex.foldLeft(clusters)((acc, e) => {
       acc += e._2 -> e._1.min
-//      e._1.min match {
-//        case e._2 => acc += e._2 -> e._1.max
-//        case _ => acc += e._2 -> e._1.min
-//      }
     })
 
     clusters
   }
 
-  def printToFile(outf: PrintWriter): Unit = {
-    val m = groupTweets()
-//    m.foreach { item =>
-//      outf.println(tweetList(item._1))
-//      outf.println(tweetList(item._2))
-//      outf.println()
-//    }
-    m.toList.groupBy {
-      case (x, y) => getCluster(y, m)
-    }.toList.foreach { cluster =>
-      println(cluster)
-      cluster._2.foreach { tweetId =>
-        outf.println(tweetList(tweetId._2))
-      }
-      outf.println()
-    }
+  def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
+    val outFile = new PrintWriter("myfileout")
+    val m = groupTweets(queue)
+    outFile.println(m.map(e => (e._2, tweetList(e._1))).toList.toJson)
+    outFile.close()
   }
 
   def getCluster(key: Int, m: scala.collection.mutable.Map[Int,Int]): Int = {

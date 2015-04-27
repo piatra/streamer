@@ -41,23 +41,16 @@ object App {
 
   def main(args : Array[String]) {
 
-    StatusStreamer.fetchTweets(Array("javascript", "nodejs", "scala", "python"))
-//    val topic: String = "test"
-//    val threads = 1
-//    val xmlOut = new PrintWriter("myfileout")
-//
-//    val example = new KafkaConsumer(topic, readqueue)
-//    example.run(threads)
-//
-//    Thread.sleep(60000)
-//    example.shutdown()
-//
-//    println(readqueue.size() + " tweets to parse")
-//
-//    val TweetParser = new TweetParser(readqueue, xmlOut)
-//    println("Print to file")
-//    TweetParser.printToFile(xmlOut)
-//
-//    xmlOut.close()
+    StatusStreamer.fetchTweets(Array("javascript"))
+    (new Thread(new Server(8080))).start()
+
+    val topic: String = "javascript"
+    val threads = 1
+
+    val example = new KafkaConsumer(topic)
+    example.run(threads)
+    Thread.sleep(1000)
+    example.shutdown()
+    println("Done parsing")
   }
 }

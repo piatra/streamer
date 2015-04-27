@@ -1,6 +1,6 @@
 import java.util
 import java.util.Properties
-import java.util.concurrent.{LinkedBlockingQueue, ExecutorService, Executors}
+import java.util.concurrent.{ExecutorService, Executors}
 
 import kafka.consumer.{ConsumerConfig, KafkaStream}
 import kafka.javaapi.consumer.ConsumerConnector
@@ -9,21 +9,23 @@ import kafka.utils.ZkUtils
 import scala.collection.JavaConversions._
 
 class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumber: Int,
-                   queue: LinkedBlockingQueue[(String, String)]) extends Runnable {
+                   TwtParser: TweetParser) extends Runnable {
 
   var m_stream: KafkaStream[Array[Byte], Array[Byte]] = a_stream
   var m_threadNumber: Integer = a_threadNumber
 
   def run() {
     val it = m_stream.iterator()
-    while (it.hasNext()) {
+    var steps = 30
+    while (it.hasNext() && steps > 0) {
+      steps = steps - 1
       val next = it.next()
-      queue.put((new String(next.key()), new String(next.message())))
+      TwtParser.queueTweet((new String(next.key()), new String(next.message())))
     }
   }
 }
 
-class KafkaConsumer(a_topic: String, queue: LinkedBlockingQueue[(String, String)]) {
+class KafkaConsumer(a_topic: String) {
 
   val zooKeeper: String = "localhost:2181"
   val groupId: String = "1"
@@ -32,6 +34,8 @@ class KafkaConsumer(a_topic: String, queue: LinkedBlockingQueue[(String, String)
                                               .createJavaConsumerConnector(createConsumerConfig(zooKeeper, groupId))
   var topic: String = a_topic
   var executor: ExecutorService = _
+
+  val TwtParser = new TweetParser()
 
   def shutdown() {
     if (consumer != null) consumer.shutdown()
@@ -45,14 +49,12 @@ class KafkaConsumer(a_topic: String, queue: LinkedBlockingQueue[(String, String)
     val streams: util.List[KafkaStream[Array[Byte], Array[Byte]]] = consumerMap.get(topic)
 
     // now launch all the threads
-    //
     executor = Executors.newFixedThreadPool(a_numThreads)
 
     // now create an object to consume the messages
-    //
     var threadNumber: Int = 0
     for (stream <- streams.iterator()) {
-      executor.submit(new ConsumerTest(stream, threadNumber, queue))
+      executor.submit(new ConsumerTest(stream, threadNumber, TwtParser))
       threadNumber += 1
     }
   }
