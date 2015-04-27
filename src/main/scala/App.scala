@@ -1,10 +1,8 @@
-import java.io.PrintWriter
 import java.util.concurrent.LinkedBlockingQueue
 
 import twitter4j._
 
 object App {
-  val writequeue = new LinkedBlockingQueue[(String, String)]
   val readqueue = new LinkedBlockingQueue[(String, String)]
 
   object Util {
@@ -14,10 +12,11 @@ object App {
       .setOAuthAccessToken("80282681-xCPKdvowdCTQblkemAKvf8uIa5WJelhxw6sOIkg1m")
       .setOAuthAccessTokenSecret("BPdFtPDrvUxcBD3hmBeo0g5RM0usaB3p6cZIBZa6Xk7fy")
       .build
+    val prodThread = new KafkaProducer()
 
     def simpleStatusListener = new StatusListener() {
       def onStatus(status: Status): Unit = {
-        writequeue.put((status.getUser.getScreenName, status.getText))
+        prodThread.putTweet(status.getUser.getScreenName, status.getText)
       }
       def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice) {}
       def onTrackLimitationNotice(numberOfLimitedStatuses: Int) {}
@@ -38,38 +37,27 @@ object App {
       filter.track(keywords)
       twitterStream.filter(filter)
     }
-
-    def shutdown(): Unit = {
-      writequeue.put("STOP", "STOP")
-
-      twitterStream.cleanUp()
-      twitterStream.shutdown()
-    }
   }
 
   def main(args : Array[String]) {
-    val prodThread = new Thread(new KafkaProducer(writequeue))
-    prodThread.start()
 
     StatusStreamer.fetchTweets(Array("javascript", "nodejs", "scala", "python"))
-    val topic: String = "test"
-    val threads = 1
-    val xmlOut = new PrintWriter("myfileout")
-
-    val example = new KafkaConsumer(topic, readqueue)
-    example.run(threads)
-
-    Thread.sleep(60000)
-    StatusStreamer.shutdown()
-    prodThread.join()
-    example.shutdown()
-
-    println(readqueue.size() + " tweets to parse")
-
-    val TweetParser = new TweetParser(readqueue, xmlOut)
-    println("Print to file")
-    TweetParser.printToFile(xmlOut)
-
-    xmlOut.close()
+//    val topic: String = "test"
+//    val threads = 1
+//    val xmlOut = new PrintWriter("myfileout")
+//
+//    val example = new KafkaConsumer(topic, readqueue)
+//    example.run(threads)
+//
+//    Thread.sleep(60000)
+//    example.shutdown()
+//
+//    println(readqueue.size() + " tweets to parse")
+//
+//    val TweetParser = new TweetParser(readqueue, xmlOut)
+//    println("Print to file")
+//    TweetParser.printToFile(xmlOut)
+//
+//    xmlOut.close()
   }
 }
