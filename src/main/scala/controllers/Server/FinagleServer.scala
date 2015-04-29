@@ -2,9 +2,9 @@ package controllers.Server
 
 import java.net.InetSocketAddress
 
+import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.builder.{Server, ServerBuilder}
 import com.twitter.finagle.http.Http
-import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.io.Charsets.Utf8
 import com.twitter.util.Future
 import org.jboss.netty.buffer.ChannelBuffers.copiedBuffer
@@ -64,7 +64,9 @@ class FinagleServer {
       val response = new DefaultHttpResponse(HTTP_1_1, OK)
       response.headers.add("Access-Control-Allow-Origin", "*")
       response.headers.add("Access-Control-Allow-Credentials", "true")
-      response.setContent(copiedBuffer("hello world", Utf8))
+      response.headers.set("Content-Type", "application/json")
+      val content = scala.io.Source.fromFile("/Users/mozilla/IdeaProjects/HelloWorld/myfileout").mkString
+      response.setContent(copiedBuffer(content, Utf8))
       Future.value(response)
     }
   }
