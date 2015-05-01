@@ -6,11 +6,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import edu.stanford.nlp.ling.{CoreAnnotations, IndexedWord}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 import scala.collection.JavaConversions._
-
-import spray.json._
-import DefaultJsonProtocol._ // if you don't supply your own Protocol (see below)
 
 class TweetParser() {
 
