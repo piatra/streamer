@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import edu.stanford.nlp.ling.{CoreAnnotations, IndexedWord}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation
+import kmeans.KMeans
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
@@ -90,23 +91,27 @@ class TweetParser() {
         y <- weightedTweets
         idx = weightedTweets.toSeq.indexOf(x)
         idy = weightedTweets.toSeq.indexOf(y)
-        if (idx != idy)}
+        if idx != idy
+    }
       yield (idx, idy, x.keySet.intersect(y.keySet).toList
         .map(e => (x.getOrElse(e, 0.toFloat) + y.getOrElse(e, 0.toFloat)) / 2).sum)
-
-//    matches.filter(e => e._3 > 0).foreach{ e =>
-//      println(weightedTweets.toList(e._1))
-//      println(weightedTweets.toList(e._2))
-//      println()
-//    }
 
     matches.filter(e => e._3 > 0)
   }
 
+  def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
+    println("group")
+    val weightedTweets: List[Map[String, Float]] = queue.map(tweetSentenceWeights).toList
+
+    val kmeans = new KMeans(weightedTweets)
+    kmeans.cluster(5)
+  }
+
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
-    val m = groupTweets(queue)
+    val m = kmeansGrouping(queue).zip(queue)
+    println("Write to file")
     val outFile = new PrintWriter("myfileout")
-    outFile.println(m.map(e => (e._1, e._2, e._3, tweetList(e._1), tweetList(e._2))).toList.toJson)
+    outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
   }
