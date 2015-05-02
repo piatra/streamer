@@ -41,14 +41,17 @@ object App {
   }
 
   def main(args : Array[String]) {
-      val server = new FinagleServer
-      val topic: String = "javascript"
-      val threads = 1
-      val example = new KafkaConsumer(topic)
-      server.serve()
-      StatusStreamer.fetchTweets(Array("javascript", "python"))
-      example.run(threads)
-      Thread.sleep(1000)
-      example.shutdown()
+    StatusStreamer.fetchTweets(Array("javascript", "python"))
+    println("Wait to fetch some tweets...")
+    Thread.sleep(10000)
+    println("Resuming")
+    val server = new FinagleServer
+    val topic: String = "javascript"
+    val threads = 1
+    val example = new KafkaConsumer(topic)
+    server.serve()
+    example.run(threads)
+    Thread.sleep(1000)
+    example.shutdown()
   }
 }
