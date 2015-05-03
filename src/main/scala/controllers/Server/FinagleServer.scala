@@ -65,7 +65,7 @@ class FinagleServer {
       response.headers.add("Access-Control-Allow-Origin", "*")
       response.headers.add("Access-Control-Allow-Credentials", "true")
       response.headers.set("Content-Type", "application/json")
-      val content = scala.io.Source.fromFile("/Users/mozilla/IdeaProjects/HelloWorld/myfileout").mkString
+      val content = scala.io.Source.fromFile("output.json").mkString
       response.setContent(copiedBuffer(content, Utf8))
       Future.value(response)
     }
