@@ -25,7 +25,8 @@ class TweetParser() {
 
   def queueTweet(tweet: (String, String)): Unit = {
     queue.put(tweet)
-    if (queue.size() % 10 == 0) {
+    println(tweet)
+    if (queue.size() % 5 == 0) {
       printToFile(queue)
     }
   }

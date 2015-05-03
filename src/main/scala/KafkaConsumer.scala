@@ -16,9 +16,7 @@ class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumb
 
   def run() {
     val it = m_stream.iterator()
-    var steps = 100
-    while (it.hasNext() && steps > 0) {
-      steps = steps - 1
+    while (it.hasNext()) {
       val next = it.next()
       TwtParser.queueTweet((new String(next.key()), new String(next.message())))
     }

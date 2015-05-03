@@ -43,7 +43,7 @@ object App {
   def main(args : Array[String]) {
     StatusStreamer.fetchTweets(Array("javascript", "python"))
     println("Wait to fetch some tweets...")
-    Thread.sleep(60000)
+    Thread.sleep(120000)
     println("Resuming")
     val server = new FinagleServer
     val topic: String = "javascript"
