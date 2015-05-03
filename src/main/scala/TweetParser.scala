@@ -111,7 +111,7 @@ class TweetParser() {
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
     val m = kmeansGrouping(queue).zip(queue)
     println("Write to file")
-    val outFile = new PrintWriter("myfileout")
+    val outFile = new PrintWriter("output.json")
     outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
