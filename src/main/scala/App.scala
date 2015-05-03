@@ -51,7 +51,5 @@ object App {
     val example = new KafkaConsumer(topic)
     server.serve()
     example.run(threads)
-    Thread.sleep(1000)
-    example.shutdown()
   }
 }
