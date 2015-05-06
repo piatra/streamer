@@ -5,9 +5,9 @@ import scala.util.Random
 
 class KMeans(points: List[List[String]]) {
   val tfidf = new TfIdf(points)
-  var maxIterations = 20
 
-  def cluster(nc: Int): List[Int] = {
+  def cluster(nc: Int): (List[Int], Double) = {
+    var maxIterations = 20
     var initialClusters = getRandomPoints(tfidf.vectorspace, nc)
     var ok: Boolean = true
     var assignment: List[Int] = Nil
@@ -24,12 +24,14 @@ class KMeans(points: List[List[String]]) {
       val d = initialClusters.zip(step).map(pairOfLists => delta(pairOfLists)).map(_.sum).sum
       if (d == 0) {
         ok = false
+      } else {
+        initialClusters = step
       }
       maxIterations = maxIterations - 1
-      initialClusters = step
     }
-    println("Completed in " + (20 - maxIterations))
-    assignment
+    val similarity = assignment.zipWithIndex
+                                .map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
+    (assignment, similarity)
   }
 
   def delta(xs: (List[Double], List[Double])): List[Double] = {

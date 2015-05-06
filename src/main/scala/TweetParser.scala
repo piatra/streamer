@@ -85,9 +85,14 @@ class TweetParser() {
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
     println("group")
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
-
     val kmeans = new KMeans(weightedTweets)
-    kmeans.cluster(5)
+    var attempts: List[(List[Int], Double)] = List()
+
+    for (x <- 0 to 5) {
+      attempts = attempts :+ kmeans.cluster(5)
+    }
+    println(attempts)
+    attempts.maxBy(_._2)._1
   }
 
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
