@@ -25,8 +25,7 @@ class TweetParser() {
 
   def queueTweet(tweet: (String, String)): Unit = {
     queue.put(tweet)
-    println(tweet)
-    if (queue.size() % 5 == 0) {
+    if (queue.size > 20 && queue.size % 10 == 0) {
       printToFile(queue)
     }
   }
@@ -46,11 +45,10 @@ class TweetParser() {
     return true
   }
 
-  def computeWeight(node: Array[util.ArrayList[String]]): Map[String, Float] = {
-    val length = node.length
+  def computeWeight(node: Array[util.ArrayList[String]]): List[String] = {
     node
       .map(e => e.drop(2).head).groupBy(e => e)
-      .map(e => e._1 -> (e._2.length.toFloat / length))
+      .map(e => e._1).toList
   }
 
   def extractWord(node: IndexedWord): List[String] = {
@@ -64,7 +62,7 @@ class TweetParser() {
     buf
   }
 
-  def tweetSentenceWeights(tweet: (String, String)): Map[String, Float] = {
+  def tweetSentenceWeights(tweet: (String, String)): List[String] = {
 
     tweetList = tweetList :+ tweet
 
@@ -73,7 +71,7 @@ class TweetParser() {
     pipeline.annotate(document)
 
     val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
-    var weights = Map[String, Float]()
+    var weights = List[String]()
     if (sentences != null && sentences.size() != 0) {
       weights = computeWeight(sentences.map { sentence =>
         val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
@@ -84,25 +82,9 @@ class TweetParser() {
     weights
   }
 
-  def groupTweets(tweets: LinkedBlockingQueue[(String, String)]): Iterable[(Int,Int,Float)] = { // ID, PAIR, MATCH
-
-    val weightedTweets: Iterable[Map[String, Float]] = tweets.map(tweetSentenceWeights)
-
-    val matches = for { x <- weightedTweets
-        y <- weightedTweets
-        idx = weightedTweets.toSeq.indexOf(x)
-        idy = weightedTweets.toSeq.indexOf(y)
-        if idx != idy
-    }
-      yield (idx, idy, x.keySet.intersect(y.keySet).toList
-        .map(e => (x.getOrElse(e, 0.toFloat) + y.getOrElse(e, 0.toFloat)) / 2).sum)
-
-    matches.filter(e => e._3 > 0)
-  }
-
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
     println("group")
-    val weightedTweets: List[Map[String, Float]] = queue.map(tweetSentenceWeights).toList
+    val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
 
     val kmeans = new KMeans(weightedTweets)
     kmeans.cluster(5)

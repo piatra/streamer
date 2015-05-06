@@ -3,7 +3,7 @@ package kmeans
 import TfIdf.TfIdf
 import scala.util.Random
 
-class KMeans(points: List[Map[String, Float]]) {
+class KMeans(points: List[List[String]]) {
   val tfidf = new TfIdf(points)
   var maxIterations = 20
 
