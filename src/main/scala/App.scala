@@ -41,7 +41,7 @@ object App {
   }
 
   def main(args : Array[String]) {
-    StatusStreamer.fetchTweets(Array("javascript", "python", "footbal", "taylor swift"))
+    StatusStreamer.fetchTweets(Array("javascript", "python", "nodejs", "java"))
     println("Wait to fetch some tweets...")
     Thread.sleep(18000)
     println("Resuming")
