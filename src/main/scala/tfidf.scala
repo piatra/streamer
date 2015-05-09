@@ -25,9 +25,14 @@ class TfIdf(tweets: List[List[String]]) {
     val productAndMagnitude = a.zip(b).map(e => (e._1 * e._2, Math.pow(e._1, 2), Math.pow(e._2, 2)))
       .foldLeft((0d, 0d, 0d))((acc, e) => (acc._1 + e._1, acc._2 + e._2, acc._3 + e._3))
 
-    val r = productAndMagnitude._1.toFloat / (Math.sqrt(productAndMagnitude._2) * Math.sqrt(productAndMagnitude._3)).toFloat
+    var r = productAndMagnitude._1.toFloat / (Math.sqrt(productAndMagnitude._2) * Math.sqrt(productAndMagnitude._3)).toFloat
+    if (java.lang.Double.isNaN(r))
+      r = 0
+    if (java.lang.Float.isNaN(r))
+      r = 0
     r match {
       case Double.NaN => 0
+      case Float.NaN => 0
       case _ => r
     }
   }

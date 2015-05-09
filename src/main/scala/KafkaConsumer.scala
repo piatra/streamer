@@ -1,6 +1,6 @@
 import java.util
 import java.util.Properties
-import java.util.concurrent.{ExecutorService, Executors}
+import java.util.concurrent.{LinkedBlockingQueue, ExecutorService, Executors}
 
 import kafka.consumer.{ConsumerConfig, KafkaStream}
 import kafka.javaapi.consumer.ConsumerConnector
@@ -9,16 +9,17 @@ import kafka.utils.ZkUtils
 import scala.collection.JavaConversions._
 
 class ConsumerTest(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNumber: Int,
-                   TwtParser: TweetParser) extends Runnable {
+                   queue: LinkedBlockingQueue[(String, String)]) extends Runnable {
 
   var m_stream: KafkaStream[Array[Byte], Array[Byte]] = a_stream
   var m_threadNumber: Integer = a_threadNumber
 
   def run() {
     val it = m_stream.iterator()
+    println("put tweet in queue")
     while (it.hasNext()) {
       val next = it.next()
-      TwtParser.queueTweet((new String(next.key()), new String(next.message())))
+      queue.put((new String(next.key()), new String(next.message())))
     }
   }
 }
@@ -27,13 +28,12 @@ class KafkaConsumer(a_topic: String) {
 
   val zooKeeper: String = "localhost:2181"
   val groupId: String = "1"
+  val queue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
 
   var consumer: ConsumerConnector = kafka.consumer.Consumer
                                               .createJavaConsumerConnector(createConsumerConfig(zooKeeper, groupId))
   var topic: String = a_topic
   var executor: ExecutorService = _
-
-  val TwtParser = new TweetParser()
 
   def shutdown() {
     if (consumer != null) consumer.shutdown()
@@ -49,10 +49,14 @@ class KafkaConsumer(a_topic: String) {
     // now launch all the threads
     executor = Executors.newFixedThreadPool(a_numThreads)
 
+    println("start tweet parser")
+    (new Thread(new TweetParser(queue))).start()
+    println("started")
+
     // now create an object to consume the messages
     var threadNumber: Int = 0
     for (stream <- streams.iterator()) {
-      executor.submit(new ConsumerTest(stream, threadNumber, TwtParser))
+      executor.submit(new ConsumerTest(stream, threadNumber, queue))
       threadNumber += 1
     }
   }

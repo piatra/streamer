@@ -12,22 +12,27 @@ import spray.json._
 
 import scala.collection.JavaConversions._
 
-class TweetParser() {
+class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Runnable {
 
   def blacklist = List("DT", "CC", "PRP", "RT", "RB")
   def whitelist = List("USR", "LOCATION", "PERSON")
   var tweetList = List[(String, String)]()
   val props = new Properties()
   props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
-  props.put("pos.model", "lib/models/gate-EN-twitter.model")
+  props.put("pos.model", "lib/models/gate-EN-twitter-fast.model")
   val pipeline = new StanfordCoreNLP(props)
   val queue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
 
-  def queueTweet(tweet: (String, String)): Unit = {
-    queue.put(tweet)
-    if (queue.size > 20 && queue.size % 10 == 0) {
-      printToFile(queue)
+  def run() {
+    println("tweet parser started")
+    while (true) {
+      queue.add(tweetQueue.take)
+      if (queue.size > 150 && queue.size % 20 == 0) {
+        println("parse " + queue.size + " tweets")
+        printToFile(queue)
+      }
     }
+    println("Done")
   }
 
   def isValid(tokens: util.ArrayList[String]): Boolean = {
@@ -42,7 +47,7 @@ class TweetParser() {
       }
     }
 
-    return true
+    true
   }
 
   def computeWeight(node: Array[util.ArrayList[String]]): List[String] = {
@@ -91,7 +96,6 @@ class TweetParser() {
     for (x <- 0 to 5) {
       attempts = attempts :+ kmeans.cluster(5)
     }
-    println(attempts)
     attempts.maxBy(_._2)._1
   }
 
