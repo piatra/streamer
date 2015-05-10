@@ -14,8 +14,8 @@ import scala.collection.JavaConversions._
 
 class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Runnable {
 
-  def blacklist = List("DT", "CC", "PRP", "RT", "RB")
-  def whitelist = List("USR", "LOCATION", "PERSON")
+  def blacklist = List("DT", "CC", "PRP", "RT", "RB", "WP", "TO", "IN", "PRP")
+  def whitelist = List("USR", "LOCATION", "PERSON", "NNP")
   var tweetList = List[(String, String)]()
   val props = new Properties()
   props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
@@ -27,7 +27,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("tweet parser started")
     while (true) {
       queue.add(tweetQueue.take)
-      if (queue.size > 150 && queue.size % 20 == 0) {
+      if (queue.size > 100 && queue.size % 30 == 0) {
         println("parse " + queue.size + " tweets")
         printToFile(queue)
       }
@@ -41,8 +41,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     }
     val level = Integer.parseInt(tokens.last)
     if (level > 2) {
-      val ner = tokens.drop(1).head
-      if (whitelist.indexOf(ner) == -1) {
+      if (whitelist.indexOf(tokens.head) == -1) {
         return false
       }
     }
@@ -87,16 +86,15 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     weights
   }
 
+  def test(): List[List[String]] = {
+    queue.map(tweetSentenceWeights).toList
+  }
+
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
     println("group")
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
     val kmeans = new KMeans(weightedTweets)
-    var attempts: List[(List[Int], Double)] = List()
-
-    for (x <- 0 to 5) {
-      attempts = attempts :+ kmeans.cluster(5)
-    }
-    attempts.maxBy(_._2)._1
+    kmeans.clusterIterations(5)
   }
 
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {

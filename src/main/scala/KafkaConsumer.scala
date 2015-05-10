@@ -50,7 +50,7 @@ class KafkaConsumer(a_topic: String) {
     executor = Executors.newFixedThreadPool(a_numThreads)
 
     println("start tweet parser")
-    (new Thread(new TweetParser(queue))).start()
+    new Thread(new TweetParser(queue)).start()
     println("started")
 
     // now create an object to consume the messages

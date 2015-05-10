@@ -2,6 +2,7 @@ package kmeans
 
 import TfIdf.TfIdf
 
+import scala.math._
 import scala.util.Random
 
 class KMeans(points: List[List[String]]) {
@@ -17,20 +18,9 @@ class KMeans(points: List[List[String]]) {
 
       // compute cluster average (centroid)
       val step = initialClusters.par.map { cluster =>
-        val p = assignment.zipWithIndex.map(e => (e._1, tfidf.vectorspace(e._2)))
-          .filter(e => initialClusters.indexOf(cluster) == e._1).map(_._2)
-        p.transpose.map(_.sum).map{e =>
-          var r =  e.toFloat / p.size.toFloat
-          if (java.lang.Double.isNaN(r))
-            r = 0
-          if (java.lang.Float.isNaN(r))
-            r = 0
-          r match {
-            case Double.NaN => 0
-            case Float.NaN => 0
-            case _ => r.toDouble
-          }
-        }
+        val p = assignment.zipWithIndex.filter(e => initialClusters.indexOf(cluster) == e._1)
+                  .map(e => (e._1, tfidf.vectorspace(e._2))).map(_._2)
+        p.transpose.map(_.sum).map(e => e / p.size)
       }.toList
 
       val d = initialClusters.zip(step).map(pairOfLists => delta(pairOfLists)).map(_.sum).sum
@@ -43,7 +33,18 @@ class KMeans(points: List[List[String]]) {
     }
     val similarity = assignment.zipWithIndex
                         .par.map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
+
     (assignment, similarity)
+  }
+
+  def clusterIterations(it: Int): List[Int] = {
+    var attempts: List[(List[Int], Double)] = List()
+
+    for (x <- 0 to it) {
+      attempts = attempts :+ this.cluster(floor(sqrt(points.size / 2)).toInt)
+    }
+    val r = attempts.maxBy(_._2)._1
+    r
   }
 
   def delta(xs: (List[Double], List[Double])): List[Double] = {

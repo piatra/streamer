@@ -2,7 +2,7 @@ import java.util.Properties
 
 import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
 
-class KafkaProducer {
+class KafkaProducer(topic: String) {
   def putTweet(user: String, value: String): Unit = {
     val props = new Properties()
     props.put("metadata.broker.list", "localhost:9092")
@@ -10,7 +10,7 @@ class KafkaProducer {
     props.put("request.required.acks", "1")
     val config = new ProducerConfig(props)
     val producer: Producer[String, String] = new Producer[String, String](config)
-    val data = new KeyedMessage[String, String]("javascript", user, value)
+    val data = new KeyedMessage[String, String](topic, user, value)
     producer.send(data)
   }
 }
