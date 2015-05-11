@@ -1,10 +1,12 @@
-
-
 name := "HelloWorld"
 
 version := "1.0"
 
 scalaVersion := "2.10.5"
+
+fork in Compile := true
+
+javaOptions in Compile := Seq("-Xmx2G")
 
 libraryDependencies += "org.twitter4j" % "twitter4j-stream" % "4.0.2"
 

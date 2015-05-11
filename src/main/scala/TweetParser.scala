@@ -27,7 +27,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("tweet parser started")
     while (true) {
       queue.add(tweetQueue.take)
-      if (queue.size > 100 && queue.size % 30 == 0) {
+      if (queue.size > 140 && queue.size % 50 == 0) {
         println("parse " + queue.size + " tweets")
         printToFile(queue)
       }
@@ -94,7 +94,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("group")
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
     val kmeans = new KMeans(weightedTweets)
-    kmeans.clusterIterations(5)
+    kmeans.clusterIterations(3)
   }
 
   def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {

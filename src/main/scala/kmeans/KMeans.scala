@@ -2,7 +2,6 @@ package kmeans
 
 import TfIdf.TfIdf
 
-import scala.math._
 import scala.util.Random
 
 class KMeans(points: List[List[String]]) {
@@ -41,14 +40,18 @@ class KMeans(points: List[List[String]]) {
     var attempts: List[(List[Int], Double)] = List()
 
     for (x <- 0 to it) {
-      attempts = attempts :+ this.cluster(floor(sqrt(points.size / 2)).toInt)
+      attempts = attempts :+ this.cluster(10) // floor(sqrt(points.size / 2)).toInt
     }
     val r = attempts.maxBy(_._2)._1
     r
   }
 
   def delta(xs: (List[Double], List[Double])): List[Double] = {
-    xs._1.zipWithIndex.map(e => Math.abs(e._1 - xs._2(e._2)))
+    try {
+      xs._1.zipWithIndex.map(e => Math.abs(e._1 - xs._2(e._2)))
+    } catch {
+      case _ => List.fill(xs._1.size)(0)
+    }
   }
 
   def getRandomPoints(vectorspace: List[List[Double]], n: Int): List[List[Double]] = {
