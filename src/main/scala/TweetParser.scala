@@ -107,7 +107,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
     println("weighted tweets")
     println(weightedTweets)
-    weightedTweets.zipWithIndex.foreach{ case (e, i) => prodThread.putTweet(ids(i), e.mkString(","))}
+    weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
 
     println("get all parsed tweets")
     val syncConsumer = new SyncKafkaConsumer("parsed", parsedTweetsQueue)
