@@ -21,6 +21,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   props.put("pos.model", "lib/models/gate-EN-twitter-fast.model")
   val pipeline = new StanfordCoreNLP(props)
   val queue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
+  val tempqueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val parsedTweetsQueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val prodThread = new KafkaProducer("parsed")
 
@@ -39,9 +40,10 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
       if (hasElems) {
         queue.put(elem)
-        if (queue.size > 10) {
+        tempqueue.put(elem)
+        if (tempqueue.size % 10 == 0) {
           println("parse " + queue.size + " tweets")
-          printToFile(queue)
+          printToFile(tempqueue)
         }
       }
     }
@@ -105,7 +107,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
     println("weighted tweets")
     println(weightedTweets)
-    weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
+    weightedTweets.zipWithIndex.foreach{ case (e, i) => prodThread.putTweet(ids(i), e.mkString(","))}
 
     println("get all parsed tweets")
     val syncConsumer = new SyncKafkaConsumer("parsed", parsedTweetsQueue)
@@ -120,14 +122,14 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     kmeans.clusterIterations(3)
   }
 
-  def printToFile(queue: LinkedBlockingQueue[(String, String)]): Unit = {
-    val m = kmeansGrouping(queue).zip(queue)
+  def printToFile(q: LinkedBlockingQueue[(String, String)]): Unit = {
+    val m = kmeansGrouping(q).zip(queue)
     println("Write to file")
     val outFile = new PrintWriter("output.json")
     outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
-    queue.clear()
+    tempqueue.clear()
     parsedTweetsQueue.clear()
   }
 }
