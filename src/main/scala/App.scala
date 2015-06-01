@@ -44,11 +44,8 @@ object App {
 
   def main(args : Array[String]) {
     StatusStreamer.fetchTweets(Array("javascript", "python", "clojure"))
-    val prodThread = new KafkaProducer(topic)
-    prodThread.putTweet("andrei", "Ana are #mere")
-    prodThread.putTweet("andrei", "Andrei are mere:/")
     println("Wait to fetch some tweets...")
-    Thread.sleep(180000)
+    Thread.sleep(380000)
     println("Resuming")
     val server = new FinagleServer
     server.serve()
