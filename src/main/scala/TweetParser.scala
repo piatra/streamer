@@ -16,20 +16,33 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
   def blacklist = List("DT", "CC", "PRP", "RT", "RB", "WP", "TO", "IN", "PRP")
   def whitelist = List("USR", "LOCATION", "PERSON", "NNP")
-  var tweetList = List[(String, String)]()
   val props = new Properties()
   props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse")
   props.put("pos.model", "lib/models/gate-EN-twitter-fast.model")
   val pipeline = new StanfordCoreNLP(props)
   val queue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
+  val parsedTweetsQueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
+  val prodThread = new KafkaProducer("parsed")
 
   def run() {
     println("tweet parser started")
-    while (true) {
-      queue.add(tweetQueue.take)
-      if (queue.size > 140 && queue.size % 50 == 0) {
-        println("parse " + queue.size + " tweets")
-        printToFile(queue)
+    while (tweetQueue.size > 0) {
+      // can return null if the queue is empty
+      var hasElems = true
+      val elem: (String, String) = tweetQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
+      println(elem)
+      println("tweetqueue size " + tweetQueue.size)
+      elem match {
+        case (a: String, b: String) => hasElems = true
+        case _ => hasElems = false
+      }
+
+      if (hasElems) {
+        queue.put(elem)
+        if (queue.size > 0) {
+          println("parse " + queue.size + " tweets")
+          printToFile(queue)
+        }
       }
     }
     println("Done")
@@ -61,14 +74,15 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
   def formatTweet(tweet: String): String = {
     var httpRegex = """http[:\/0-9a-zA-Z\.#%&=\-~]+""".r
+    // remove pound sign from hashtags
     var buf = tweet.replaceAll("#", "")
+    // remove all links
     buf = httpRegex.replaceAllIn(buf, "")
-    buf
+    // remove all non-alphanumeric characters
+    buf.replaceAll("[^A-Za-z0-9 ]", "");
   }
 
   def tweetSentenceWeights(tweet: (String, String)): List[String] = {
-
-    tweetList = tweetList :+ tweet
 
     val cleanTweet = formatTweet(tweet._2)
     val document = new Annotation(cleanTweet)
@@ -86,14 +100,23 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     weights
   }
 
-  def test(): List[List[String]] = {
-    queue.map(tweetSentenceWeights).toList
-  }
-
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
     println("group")
     val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
-    val kmeans = new KMeans(weightedTweets)
+    println("weighted tweets")
+    println(weightedTweets)
+    weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
+
+    println("get all parsed tweets")
+    val syncConsumer = new SyncKafkaConsumer("parsed", parsedTweetsQueue)
+    syncConsumer.getAll()
+    println("got all parsed tweets")
+
+    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(",").toList).toList
+    println(listOfParsedTweets)
+    println("KMeans clustering")
+
+    val kmeans = new KMeans(listOfParsedTweets)
     kmeans.clusterIterations(3)
   }
 
@@ -104,12 +127,5 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
-  }
-
-  def getCluster(key: Int, m: scala.collection.mutable.Map[Int,Int]): Int = {
-    m.get(key) match {
-      case Some(x) => if (x == key) x else getCluster(x, m)
-      case None => key
-    }
   }
 }

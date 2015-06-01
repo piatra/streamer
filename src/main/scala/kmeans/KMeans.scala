@@ -40,7 +40,7 @@ class KMeans(points: List[List[String]]) {
     var attempts: List[(List[Int], Double)] = List()
 
     for (x <- 0 to it) {
-      attempts = attempts :+ this.cluster(10) // floor(sqrt(points.size / 2)).toInt
+      attempts = attempts :+ this.cluster(Math.floor(Math.sqrt(points.size / 2)).toInt)
     }
     val r = attempts.maxBy(_._2)._1
     r
@@ -50,7 +50,7 @@ class KMeans(points: List[List[String]]) {
     try {
       xs._1.zipWithIndex.map(e => Math.abs(e._1 - xs._2(e._2)))
     } catch {
-      case _ => List.fill(xs._1.size)(0)
+      case _: Throwable => List.fill(xs._1.size)(0)
     }
   }
 

@@ -4,8 +4,9 @@ import controllers.Server.FinagleServer
 import twitter4j._
 
 object App {
-  val readqueue = new LinkedBlockingQueue[(String, String)]
-  val topic: String = "javascript"
+  val rawTweetsQueue = new LinkedBlockingQueue[(String, String)]
+  val topic: String = "javascript2"
+  val threads = 1
 
   object Util {
     val config = new twitter4j.conf.ConfigurationBuilder()
@@ -42,14 +43,22 @@ object App {
   }
 
   def main(args : Array[String]) {
-    StatusStreamer.fetchTweets(Array("javascript", "python", "clojure"))
+//    StatusStreamer.fetchTweets(Array("javascript", "python", "clojure"))
+    val prodThread = new KafkaProducer(topic)
+    prodThread.putTweet("andrei", "Ana are #mere")
+    prodThread.putTweet("andrei", "Andrei are mere:/")
     println("Wait to fetch some tweets...")
-    Thread.sleep(18000)
+    Thread.sleep(1000)
     println("Resuming")
     val server = new FinagleServer
-    val threads = 1
-    val example = new KafkaConsumer(topic)
     server.serve()
+    println("server started")
+    println("start the consumer")
+    val example = new KafkaConsumer(topic, rawTweetsQueue)
     example.run(threads)
+    println("consumer started")
+    println("start tweet parser")
+    new Thread(new TweetParser(rawTweetsQueue)).start()
+    println("started")
   }
 }
