@@ -48,7 +48,7 @@ object App {
     prodThread.putTweet("andrei", "Ana are #mere")
     prodThread.putTweet("andrei", "Andrei are mere:/")
     println("Wait to fetch some tweets...")
-    Thread.sleep(90000)
+    Thread.sleep(180000)
     println("Resuming")
     val server = new FinagleServer
     server.serve()
