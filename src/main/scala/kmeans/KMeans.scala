@@ -37,13 +37,8 @@ class KMeans(points: List[List[String]]) {
   }
 
   def clusterIterations(it: Int): List[Int] = {
-    var attempts: List[(List[Int], Double)] = List()
-
-    for (x <- 0 to it) {
-      attempts = attempts :+ this.cluster(Math.floor(Math.sqrt(points.size / 2)).toInt)
-    }
-    val r = attempts.maxBy(_._2)._1
-    r
+    val attempts: List[(List[Int], Double)] = List.fill(it)(this.cluster(Math.floor(Math.sqrt(points.size / 2)).toInt))
+    attempts.maxBy(_._2)._1
   }
 
   def delta(xs: (List[Double], List[Double])): List[Double] = {

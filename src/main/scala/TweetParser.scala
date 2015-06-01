@@ -39,7 +39,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
       if (hasElems) {
         queue.put(elem)
-        if (queue.size > 0) {
+        if (queue.size > 10) {
           println("parse " + queue.size + " tweets")
           printToFile(queue)
         }
@@ -127,5 +127,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
+    queue.clear()
+    parsedTweetsQueue.clear()
   }
 }
