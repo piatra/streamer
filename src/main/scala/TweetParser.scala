@@ -26,7 +26,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
   def run() {
     println("tweet parser started")
-    while (tweetQueue.size > 0) {
+    while (true) {
       // can return null if the queue is empty
       var hasElems = true
       val elem: (String, String) = tweetQueue.take //poll(1, java.util.concurrent.TimeUnit.SECONDS)
