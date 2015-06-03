@@ -41,7 +41,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
       if (hasElems) {
         queue.put(elem)
         tempqueue.put(elem)
-        if (tempqueue.size % 10 == 0) {
+        if (tempqueue.size % 100 == 0) {
           println("parse " + queue.size + " tweets")
           printToFile(tempqueue)
         }
@@ -119,12 +119,13 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("KMeans clustering")
 
     val kmeans = new KMeans(listOfParsedTweets)
-    kmeans.clusterIterations(3)
+    kmeans.clusterIterations(2)
   }
 
   def printToFile(q: LinkedBlockingQueue[(String, String)]): Unit = {
     val m = kmeansGrouping(q).zip(queue)
-    println("Write to file")
+    val timestamp: Long = System.currentTimeMillis / 1000
+    println("[LOG][" + timestamp + "]" + m.size + " tweets")
     val outFile = new PrintWriter("output.json")
     outFile.println(m.toJson)
     outFile.flush()
