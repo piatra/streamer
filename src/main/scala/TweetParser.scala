@@ -100,7 +100,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     List()
   }
 
-  def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
+  def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): Iterable[Int] = {
     println("group")
     val weightedTweets: Iterable[List[String]] = queue.map(tweetSentenceWeights)
     println("weighted tweets")
