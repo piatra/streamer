@@ -24,6 +24,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   val tempqueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val parsedTweetsQueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val prodThread = new KafkaProducer("parsed")
+  val outFile = new PrintWriter("output.json")
 
   def run() {
     println("tweet parser started")
@@ -31,8 +32,6 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
       // can return null if the queue is empty
       var hasElems = true
       val elem: (String, String) = tweetQueue.take //poll(1, java.util.concurrent.TimeUnit.SECONDS)
-      println(elem)
-      println("tweetqueue size " + tweetQueue.size)
       elem match {
         case (a: String, b: String) => hasElems = true
         case _ => hasElems = false
@@ -81,7 +80,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     // remove all links
     buf = httpRegex.replaceAllIn(buf, "")
     // remove all non-alphanumeric characters
-    buf.replaceAll("[^A-Za-z0-9 ]", "");
+    buf.replaceAll("[^A-Za-z0-9 ]", "")
   }
 
   def tweetSentenceWeights(tweet: (String, String)): List[String] = {
@@ -91,15 +90,14 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     pipeline.annotate(document)
 
     val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
-    var weights = List[String]()
-    if (sentences != null && sentences.size() != 0) {
-      weights = computeWeight(sentences.map { sentence =>
+    if (sentences != null && sentences.size != 0) {
+      return computeWeight(sentences.par.map { sentence =>
         val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
         ne.getAll().filter(isValid)
       }.flatten.toArray)
     }
 
-    weights
+    List()
   }
 
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
@@ -119,14 +117,13 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("KMeans clustering")
 
     val kmeans = new KMeans(listOfParsedTweets)
-    kmeans.clusterIterations(2)
+    kmeans.clusterIterations(1)
   }
 
   def printToFile(q: LinkedBlockingQueue[(String, String)]): Unit = {
     val m = kmeansGrouping(q).zip(queue)
     val timestamp: Long = System.currentTimeMillis / 1000
     println("[LOG][" + timestamp + "]" + m.size + " tweets")
-    val outFile = new PrintWriter("output.json")
     outFile.println(m.toJson)
     outFile.flush()
     outFile.close()
