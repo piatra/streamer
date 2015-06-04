@@ -91,7 +91,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
     val sentences = document.get(classOf[CoreAnnotations.SentencesAnnotation])
     if (sentences != null && sentences.size != 0) {
-      return computeWeight(sentences.par.map { sentence =>
+      return computeWeight(sentences.map { sentence =>
         val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
         ne.getAll().filter(isValid)
       }.flatten.toArray)

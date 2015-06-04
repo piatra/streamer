@@ -16,7 +16,7 @@ class KMeans(points: List[List[String]]) {
       assignment = tfidf.vectorspace.map(assignToClosest(initialClusters))
 
       // compute cluster average (centroid)
-      val step = initialClusters.par.map { cluster =>
+      val step = initialClusters.map { cluster =>
         val p = assignment.zipWithIndex.filter(e => initialClusters.indexOf(cluster) == e._1)
                   .map(e => (e._1, tfidf.vectorspace(e._2))).map(_._2)
         p.transpose.map(_.sum).map(e => e / p.size)
@@ -31,7 +31,7 @@ class KMeans(points: List[List[String]]) {
       maxIterations = maxIterations - 1
     }
     val similarity = assignment.zipWithIndex
-                        .par.map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
+                        .map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
 
     (assignment, similarity)
   }
