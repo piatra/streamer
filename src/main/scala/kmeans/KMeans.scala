@@ -4,7 +4,7 @@ import TfIdf.TfIdf
 
 import scala.util.Random
 
-class KMeans(points: List[List[String]]) {
+class KMeans(points: Iterable[Array[String]]) {
   val tfidf = new TfIdf(points)
 
   def cluster(nc: Int): (List[Int], Double) = {
@@ -20,7 +20,7 @@ class KMeans(points: List[List[String]]) {
         val p = assignment.zipWithIndex.filter(e => initialClusters.indexOf(cluster) == e._1)
                   .map(e => (e._1, tfidf.vectorspace(e._2))).map(_._2)
         p.transpose.map(_.sum).map(e => e / p.size)
-      }.toList
+      }
 
       val d = initialClusters.zip(step).map(pairOfLists => delta(pairOfLists)).map(_.sum).sum
       if (d == 0) {

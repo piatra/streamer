@@ -1,19 +1,19 @@
 package TfIdf
 
-class TfIdf(tweets: List[List[String]]) {
-  private val documentsSize = tweets.map(e => e.size).sum
+class TfIdf(tweets: Iterable[Array[String]]) {
+  private val documentsSize = tweets.map(e => e.length).sum
   private val globalWords = tweets.flatten
-  val vectorspace: List[List[Double]] = tweets.filter(e => e.size > 0).map{tweet =>
+  val vectorspace: Iterable[Iterable[Double]] = tweets.filter(e => e.length > 0).map{tweet =>
     globalWords.map{word =>
       this.termFrequency(tweet, word) * this.inverseDocumentFrequency(word)
     }
   }
 
-  def termFrequency(tweet: List[String], term: String): Double = {
-    this.noOfOccurrences(tweet, term) / tweet.size
+  def termFrequency(tweet: Array[String], term: String): Double = {
+    this.noOfOccurrences(tweet, term) / tweet.length
   }
 
-  def noOfOccurrences(tweet: List[String], term: String): Double = {
+  def noOfOccurrences(tweet: Array[String], term: String): Double = {
     tweet.foldLeft(0)((acc, e) => if (e.equalsIgnoreCase(term)) acc + 1; else acc)
   }
 

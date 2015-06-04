@@ -74,13 +74,13 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   }
 
   def formatTweet(tweet: String): String = {
-    var httpRegex = """http[:\/0-9a-zA-Z\.#%&=\-~]+""".r
+//    var httpRegex = """http[:\/0-9a-zA-Z\.#%&=\-~]+""".r
     // remove pound sign from hashtags
     var buf = tweet.replaceAll("#", "")
     // remove all links
-    buf = httpRegex.replaceAllIn(buf, "")
+//    buf = httpRegex.replaceAllIn(buf, "")
     // remove all non-alphanumeric characters
-    buf.replaceAll("[^A-Za-z0-9 ]", "")
+    buf.replaceAll("[^A-Za-z0-9.,?!; ]", "")
   }
 
   def tweetSentenceWeights(tweet: (String, String)): List[String] = {
@@ -102,7 +102,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): List[Int] = {
     println("group")
-    val weightedTweets: List[List[String]] = queue.map(tweetSentenceWeights).toList
+    val weightedTweets: Iterable[List[String]] = queue.map(tweetSentenceWeights)
     println("weighted tweets")
     println(weightedTweets)
     weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
@@ -112,7 +112,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     syncConsumer.getAll()
     println("got all parsed tweets")
 
-    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(",").toList).toList
+    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(","))
     println(listOfParsedTweets)
     println("KMeans clustering")
 
