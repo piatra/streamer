@@ -4,7 +4,7 @@ import scala.util.Random
 
 import TfIdf.TfIdf
 
-class KMeans(points: Iterable[Array[String]]) {
+class KMeans(points: Vector[Vector[String]]) {
   val tfidf = new TfIdf(points)
 
   def cluster(nc: Int): (Iterable[Int], Double) = {

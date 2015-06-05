@@ -3,7 +3,7 @@ import java.util
 import java.util.Properties
 import java.util.concurrent.LinkedBlockingQueue
 
-import edu.stanford.nlp.ling.{CoreAnnotations, IndexedWord}
+import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation
 import kmeans.KMeans
@@ -63,14 +63,10 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     true
   }
 
-  def computeWeight(node: Array[util.ArrayList[String]]): List[String] = {
+  def computeWeight(node: Vector[util.ArrayList[String]]): Iterable[String] = {
     node
       .map(e => e.drop(2).head).groupBy(e => e)
-      .map(e => e._1).toList
-  }
-
-  def extractWord(node: IndexedWord): List[String] = {
-    List(node.tag(), node.ner(), node.originalText())
+      .map(e => e._1)
   }
 
   def formatTweet(tweet: String): String = {
@@ -83,7 +79,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     buf.replaceAll("[^A-Za-z0-9.,?!; ]", "")
   }
 
-  def tweetSentenceWeights(tweet: (String, String)): List[String] = {
+  def tweetSentenceWeights(tweet: (String, String)): Iterable[String] = {
 
     val cleanTweet = formatTweet(tweet._2)
     val document = new Annotation(cleanTweet)
@@ -94,7 +90,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
       return computeWeight(sentences.map { sentence =>
         val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
         ne.getAll().filter(isValid)
-      }.flatten.toArray)
+      }.flatten.toVector)
     }
 
     List()
@@ -102,7 +98,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
 
   def kmeansGrouping(queue: LinkedBlockingQueue[(String, String)]): Iterable[Int] = {
     println("group")
-    val weightedTweets: Iterable[List[String]] = queue.map(tweetSentenceWeights)
+    val weightedTweets: Iterable[Iterable[String]] = queue.map(tweetSentenceWeights)
     println("weighted tweets")
     println(weightedTweets)
     weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
@@ -112,7 +108,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     syncConsumer.getAll()
     println("got all parsed tweets")
 
-    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(","))
+    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(",").toVector).toVector
     println(listOfParsedTweets)
     println("KMeans clustering")
 
