@@ -11,6 +11,7 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Runnable {
 
@@ -63,7 +64,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     true
   }
 
-  def computeWeight(node: Vector[util.ArrayList[String]]): Iterable[String] = {
+  def computeWeight(node: mutable.Buffer[util.ArrayList[String]]): Iterable[String] = {
     node
       .map(e => e.drop(2).head).groupBy(e => e)
       .map(e => e._1)
@@ -90,7 +91,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
       return computeWeight(sentences.map { sentence =>
         val ne = new NodeExtractor(sentence.get(classOf[CollapsedDependenciesAnnotation]))
         ne.getAll().filter(isValid)
-      }.flatten.toVector)
+      }.flatten)
     }
 
     List()
@@ -100,7 +101,6 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("group")
     val weightedTweets: Iterable[Iterable[String]] = queue.map(tweetSentenceWeights)
     println("weighted tweets")
-    println(weightedTweets)
     weightedTweets.foreach(e => prodThread.putTweet("parsed", e.mkString(",")))
 
     println("get all parsed tweets")
@@ -109,7 +109,6 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("got all parsed tweets")
 
     val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(",").toVector).toVector
-    println(listOfParsedTweets)
     println("KMeans clustering")
 
     val kmeans = new KMeans(listOfParsedTweets)
