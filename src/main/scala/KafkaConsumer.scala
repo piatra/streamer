@@ -18,7 +18,6 @@ class QueueConsumer(a_stream: KafkaStream[Array[Byte], Array[Byte]], a_threadNum
     val it = m_stream.iterator()
     while (it.hasNext()) {
       val next = it.next()
-      println(new String(next.key()), new String(next.message()))
       queue.put((new String(next.key()), new String(next.message())))
     }
   }
@@ -32,7 +31,6 @@ class SyncQueueConsumer(a_stream: KafkaStream[Array[Byte], Array[Byte]], queue: 
     try {
       while (hasNext) {
         val next = it.next()
-        println((new String(next.key()), new String(next.message())), it.hasNext())
         queue.put((new String(next.key()), new String(next.message())))
       }
     } catch {
