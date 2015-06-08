@@ -25,10 +25,10 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   val tempqueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val parsedTweetsQueue: LinkedBlockingQueue[(String, String)] = new LinkedBlockingQueue[(String, String)]()
   val prodThread = new KafkaProducer("parsed")
-  val outFile = new PrintWriter("output.json")
 
   def run() {
-    println("tweet parser started")
+    val timestamp: Long = System.currentTimeMillis / 1000
+    println("[LOG][" + timestamp + "] Tweet parser has started")
     while (true) {
       // can return null if the queue is empty
       var hasElems = true
@@ -71,12 +71,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   }
 
   def formatTweet(tweet: String): String = {
-//    var httpRegex = """http[:\/0-9a-zA-Z\.#%&=\-~]+""".r
-    // remove pound sign from hashtags
     var buf = tweet.replaceAll("#", "")
-    // remove all links
-//    buf = httpRegex.replaceAllIn(buf, "")
-    // remove all non-alphanumeric characters
     buf.replaceAll("[^A-Za-z0-9.,?!; ]", "")
   }
 
@@ -118,6 +113,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
   def printToFile(q: LinkedBlockingQueue[(String, String)]): Unit = {
     val m = kmeansGrouping(q).zip(queue)
     val timestamp: Long = System.currentTimeMillis / 1000
+    val outFile = new PrintWriter("output.json")
     println("[LOG][" + timestamp + "]" + m.size + " tweets")
     outFile.println(m.toJson)
     outFile.flush()
