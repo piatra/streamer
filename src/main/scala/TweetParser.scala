@@ -107,7 +107,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     println("KMeans clustering")
 
     val kmeans = new KMeans(listOfParsedTweets)
-    kmeans.clusterIterations(1)
+    kmeans.clusterIterations(2)
   }
 
   def printToFile(q: LinkedBlockingQueue[(String, String)]): Unit = {
