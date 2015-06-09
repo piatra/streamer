@@ -22,4 +22,4 @@ libraryDependencies += "org.apache.zookeeper" % "zookeeper" % "3.4.6"
 
 libraryDependencies += "org.apache.kafka" % "kafka_2.10" % "0.8.2.0"
 
-libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.2.4" % "test"
