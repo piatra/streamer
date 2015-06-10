@@ -103,7 +103,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     syncConsumer.getAll()
     println("got all parsed tweets")
 
-    val listOfParsedTweets = parsedTweetsQueue.par.map(e => e._2.split(",").toVector).toVector
+    val listOfParsedTweets = parsedTweetsQueue.map(e => e._2.split(",").toVector).toVector
     println("KMeans clustering")
 
     val kmeans = new KMeans(listOfParsedTweets)
