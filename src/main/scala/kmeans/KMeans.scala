@@ -22,7 +22,7 @@ class KMeans(points: Vector[Vector[String]]) {
         p.transpose.map(_.sum).map(e => e / p.length)
       }
 
-      val d = initialClusters.zip(step).map(pairOfLists => delta(pairOfLists)).map(_.sum).sum
+      val d = initialClusters.zip(step).par.map(pairOfLists => delta(pairOfLists)).map(_.sum).sum
       if (d == 0) {
         ok = false
       } else {
@@ -31,7 +31,7 @@ class KMeans(points: Vector[Vector[String]]) {
       maxIterations = maxIterations - 1
     }
     val similarity = assignment.zipWithIndex
-                        .map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
+                        .par.map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
 
     (assignment, similarity)
   }
