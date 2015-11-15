@@ -32,6 +32,32 @@ class KMeans(points: Vector[Vector[String]]) {
     }
     val similarity = assignment.zipWithIndex
                         .map(e => tfidf.cosineSimilarity(initialClusters(e._1), tfidf.vectorspace(e._2))).sum
+    val m = assignment.zip(tfidf.vectorspace).groupBy(e => e._1)
+
+    val silhouette = m.foreach {
+      e => {
+
+        // random index
+        val r = scala.util.Random
+        val ria = r.nextInt(e._2.length)
+
+        // as
+        val seed = e._2(ria)._2
+        val xs1  = e._2.filter(_._2 != seed)
+        val as   = xs1.foldLeft(0.0d) { (acc, el) => acc + tfidf.cosineSimilarity(seed, el._2) }
+
+        // bs
+        val xs2 = m((e._1 + 1) % nc)
+        val bs   = xs2.foldLeft(0.0d) { (acc, el) =>
+          acc + tfidf.cosineSimilarity(seed, el._2)
+        }
+
+        println(e._1, as, bs, (bs - as) / Math.max(as, bs))
+        (as, bs, (bs - as) / Math.max(as, bs))
+      }
+    }
+
+    println(silhouette)
 
     (assignment, similarity)
   }

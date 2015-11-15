@@ -32,7 +32,7 @@ class TweetParser(tweetQueue: LinkedBlockingQueue[(String, String)]) extends Run
     while (true) {
       // can return null if the queue is empty
       var hasElems = true
-      val elem: (String, String) = tweetQueue.take //poll(1, java.util.concurrent.TimeUnit.SECONDS)
+      val elem: (String, String) = tweetQueue.take
       elem match {
         case (a: String, b: String) => hasElems = true
         case _ => hasElems = false
