@@ -47,7 +47,7 @@ class KMeans(points: Vector[Vector[String]]) {
         val as   = xs1.foldLeft(0.0d) { (acc, el) => acc + tfidf.cosineSimilarity(seed, el._2) }
 
         // bs
-        val xs2 = m((e._1 + 1) % nc)
+        val xs2 = m((e._1 + r.nextInt(nc)) % nc)
         val bs   = xs2.foldLeft(0.0d) { (acc, el) =>
           acc + tfidf.cosineSimilarity(seed, el._2)
         }
