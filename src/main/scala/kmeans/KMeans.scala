@@ -48,7 +48,8 @@ class KMeans(points: Vector[Vector[String]]) {
         if (e._1 < termsPerCluster.size) {
           val aggregatedCluster = termsPerCluster(e._1)
           val purity = e._2.map(e => e._2).map(e => e.zip(aggregatedCluster).map(e => if (e._2 == 0) 1 else if (e._1 != 0) 1 else 0).sum)
-          println("purity: " + purity.max.toDouble / aggregatedCluster.size)
+                           .map(e => if (e > termsPerCluster.size / 2) 1 else 0).sum
+          println("purity in cluster " + e._1 + ": " + purity + "/" + e._2.size)
         } else {
           println("purity: 0")
         }
