@@ -45,10 +45,6 @@ class KMeans(points: Vector[Vector[String]]) {
     // compute purity
     val cls = assignment.zip(points).groupBy(e => e._1)
 
-    println(assignment)
-
-    println(points)
-
     val clsPurity = cls.map {
       e => {
         val tweets = e._2.map(e => e._2)
