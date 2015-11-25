@@ -41,19 +41,48 @@ class KMeans(points: Vector[Vector[String]]) {
       }
     }.toVector
 
+
+    // compute purity
+    val cls = assignment.zip(points).groupBy(e => e._1)
+
+    println(assignment)
+
+    println(points)
+
+    val clsPurity = cls.map {
+      e => {
+        val tweets = e._2.map(e => e._2)
+        val eps = 8
+        val occurences = tweets.flatten.map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
+        if (occurences.size < eps) {
+          val labels = occurences.map(e => e._1).toList
+          val count = tweets.count {
+            e => {
+              e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
+            }
+          }
+          println("cluster " + e._1 + " has " + count + " / " + tweets.size)
+          count.toDouble
+        } else {
+          val labels = occurences.toList.sortBy(e => e._2).take(eps).map(e => e._1)
+          val count = tweets.count {
+            e => {
+              e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
+            }
+          }
+          println("cluster " + e._1 + " has " + count + " / " + tweets.size)
+          count.toDouble
+        }
+      }
+    }
+
+    println(">>>")
+    println(clsPurity)
+    println(clsPurity.sum.toDouble / points.size)
+    println(">>>")
+
     val silhouette = m.foreach {
       e => {
-
-        // compute purity
-        if (e._1 < termsPerCluster.size) {
-          val aggregatedCluster = termsPerCluster(e._1)
-          val purity = e._2.map(e => e._2).map(e => e.zip(aggregatedCluster).map(e => if (e._2 == 0) 1 else if (e._1 != 0) 1 else 0).sum)
-                           .map(e => if (e > termsPerCluster.size / 2) 1 else 0).sum
-          println("purity in cluster " + e._1 + ": " + purity + "/" + e._2.size)
-        } else {
-          println("purity: 0")
-        }
-
 
         // random index
         val r = scala.util.Random
