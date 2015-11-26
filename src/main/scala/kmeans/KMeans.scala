@@ -48,7 +48,7 @@ class KMeans(points: Vector[Vector[String]]) {
     val clsPurity = cls.map {
       e => {
         val tweets = e._2.map(e => e._2)
-        val eps = 8
+        val eps = 6
         val occurences = tweets.flatten.map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
         if (occurences.size < eps) {
           val labels = occurences.map(e => e._1).toList
@@ -57,6 +57,7 @@ class KMeans(points: Vector[Vector[String]]) {
               e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
             }
           }
+          println(labels)
           println("cluster " + e._1 + " has " + count + " / " + tweets.size)
           count.toDouble
         } else {
@@ -66,6 +67,7 @@ class KMeans(points: Vector[Vector[String]]) {
               e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
             }
           }
+          println(labels)
           println("cluster " + e._1 + " has " + count + " / " + tweets.size)
           count.toDouble
         }
