@@ -49,7 +49,8 @@ class KMeans(points: Vector[Vector[String]]) {
       e => {
         val tweets = e._2.map(e => e._2)
         val eps = 6
-        val occurences = tweets.flatten.map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
+        val occurences = tweets.flatten.filter(e => !e.contains("http"))
+                               .map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
         if (occurences.size < eps) {
           val labels = occurences.map(e => e._1).toList
           val count = tweets.count {
