@@ -51,27 +51,15 @@ class KMeans(points: Vector[Vector[String]]) {
         val eps = 6
         val occurences = tweets.flatten.filter(e => !e.contains("http"))
                                .map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
-        if (occurences.size < eps) {
-          val labels = occurences.map(e => e._1).toList
-          val count = tweets.count {
-            e => {
-              e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
-            }
+        val labels = occurences.toList.sortBy(e => e._2).take(eps).map(e => e._1)
+        val count = tweets.count {
+          e => {
+            e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
           }
-          println(labels)
-          println("cluster " + e._1 + " has " + count + " / " + tweets.size)
-          count.toDouble
-        } else {
-          val labels = occurences.toList.sortBy(e => e._2).take(eps).map(e => e._1)
-          val count = tweets.count {
-            e => {
-              e.count(e => labels.indexOf(e.toLowerCase) >= 0) >= (labels.size / 2)
-            }
-          }
-          println(labels)
-          println("cluster " + e._1 + " has " + count + " / " + tweets.size)
-          count.toDouble
         }
+        println(labels)
+        println("cluster " + e._1 + " has " + count + " / " + tweets.size)
+        count.toDouble
       }
     }
 
