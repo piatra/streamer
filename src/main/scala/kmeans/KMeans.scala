@@ -48,7 +48,7 @@ class KMeans(points: Vector[Vector[String]]) {
     val clsPurity = cls.map {
       e => {
         val tweets = e._2.map(e => e._2)
-        val eps = 7
+        val eps = 5
         val occurences = tweets.flatten.map(e => e.toLowerCase).groupBy(identity).mapValues(_.size)
         val labels = occurences.toList.sortBy(e => e._2).reverse.take(eps).map(e => e._1)
         val count = tweets.count {
